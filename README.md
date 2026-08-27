@@ -20,6 +20,10 @@ No menu diving. No playback interruption. Just click, click, and it loops.
 
 ---
 
+[![VideoOSD A-B Loop Button](https://github.com/chrissix666/Jellyfin-VideoOSD-ABLoop-Button/raw/main/Screenshot.png)](/chrissix666/Jellyfin-VideoOSD-ABLoop-Button/blob/main/Screenshot.png)
+
+---
+
 ## What It Does
 
 - Injects an **A-B loop button** into the VideoOSD interface, right after the native playback controls
