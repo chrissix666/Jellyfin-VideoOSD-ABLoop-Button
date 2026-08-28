@@ -20,17 +20,36 @@ function abIsSupportedPlatform() {
   // standalone users.
   const PLUGIN_GUID = '468b1980-7a6c-4e45-a129-24825085ece4';
 
+  // FIX for a real bug found live, the SAME systemic race condition
+  // already found and fixed in the Core script much earlier in this
+  // project, but never carried over to this adapter: Jellyfin is a
+  // single-page app, this script's <script defer> tag runs once, at
+  // the very first index.html parse, which can easily happen BEFORE
+  // Jellyfin's own window.ApiClient global has finished initializing.
+  // The original version below gave up permanently on the very first
+  // failed attempt (no retry at all), silently falling back to the
+  // standalone defaults for the entire browser session even when the
+  // plugin genuinely was installed and configured -- confirmed live,
+  // caught via unmistakably wrong margin values (the old standalone
+  // "balanced" math) rendering even though the plugin's own config
+  // page showed correct values the whole time. Retries every 250ms
+  // for up to 30 seconds, generous enough for a slow app bootstrap,
+  // not literally forever in case something else is wrong.
   async function fetchPluginConfig() {
-    if (!window.ApiClient || typeof ApiClient.getPluginConfiguration !== 'function') {
-      return null;
+    const maxAttempts = 120;
+    const delayMs = 250;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      if (window.ApiClient && typeof ApiClient.getPluginConfiguration === 'function') {
+        try {
+          const config = await ApiClient.getPluginConfiguration(PLUGIN_GUID);
+          if (config) return config;
+        } catch (err) {
+          // fall through, try again after the delay below
+        }
+      }
+      await new Promise(function (resolve) { setTimeout(resolve, delayMs); });
     }
-    try {
-      return await ApiClient.getPluginConfiguration(PLUGIN_GUID);
-    } catch (err) {
-      // Plugin not installed, or the request failed for some other reason
-      // -- fall back to local CONFIG defaults, same as standalone usage.
-      return null;
-    }
+    return null;
   }
 
   function applyPluginConfig(pluginConfig) {
