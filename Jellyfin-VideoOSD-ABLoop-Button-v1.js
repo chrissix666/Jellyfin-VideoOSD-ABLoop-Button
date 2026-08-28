@@ -115,10 +115,34 @@ function abIsSupportedPlatform() {
     if (btn) btn.style.display = enabled ? '' : 'none';
     if (!enabled) resetLoop();
   }
+  // Same storage key format as the other 4 already-completed mods use
+  // (CUSTOMS_API_NAME + '.addon.' + id) -- A-B-Loop never defined these as
+  // its own named constants before, it just referenced
+  // 'window.JellyfinVideoOSDCustomsMenu' and CONFIG.addonId inline. Added
+  // here only so the same seeding line below can be written the same way
+  // as the other mods, nothing else changes.
+  const CUSTOMS_API_NAME = 'JellyfinVideoOSDCustomsMenu';
+  const CUSTOMS_STORAGE_KEY = CUSTOMS_API_NAME + '.addon.' + CONFIG.addonId;
+
+  // FIX, part of the "default-enabled-state" correction: A-B-Loop was the
+  // one mod of the 5 completed so far that did NOT pre-seed its own
+  // localStorage key before registering. Without this, CustomOnOff-Menu's
+  // own isAddonEnabled() found nothing there yet and defaulted to
+  // disabled, unlike the other 4 mods, which already default to enabled.
+  // This makes A-B-Loop consistent with the other 4: once loaded (i.e.
+  // once the plugin's EnableABLoop allowed the script to be delivered at
+  // all, or in standalone usage where it always loads), it starts visible
+  // in the Customs Menu by default, matching the "if it's on, you expect
+  // to see it" principle confirmed by the user, same as the other 4.
   function tryRegisterWithMenu() {
     if (registeredWithMenu) return;
     const api = window.JellyfinVideoOSDCustomsMenu;
     if (!api || typeof api.registerAddon !== 'function') return;
+
+    if (localStorage.getItem(CUSTOMS_STORAGE_KEY) === null) {
+      localStorage.setItem(CUSTOMS_STORAGE_KEY, 'true');
+    }
+
     api.registerAddon({
       id: CONFIG.addonId,
       name: CONFIG.addonLabel,
