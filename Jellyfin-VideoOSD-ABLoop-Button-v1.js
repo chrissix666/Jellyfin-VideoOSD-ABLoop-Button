@@ -268,9 +268,28 @@ function abIsSupportedPlatform() {
       return;
     }
 
+    // FIX, corrected after direct discussion with the user and
+    // confirmed against the real source: earlier attempts tried to make
+    // "gap 0" mean literally 0px (buttons touching) by compensating away
+    // the native margin entirely. Checked directly against the real
+    // native buttons in the same row (confirmed via the real source:
+    // src/controllers/playback/video/index.html has btnPause between
+    // btnRewind and btnFastForward, all three sharing the exact same
+    // "paper-icon-button-light" class, no special-casing whatsoever) --
+    // native buttons are NOT flush against each other, they visibly
+    // carry their own "margin: 0 0.29em" on both sides, which combines
+    // with a neighbor's own matching margin for a combined ~0.58em gap
+    // between any two adjacent native buttons (confirmed via the real
+    // CSS: ".videoOsdBottom .buttons" is a plain flex container with no
+    // "gap" property of its own, so per-button margin is genuinely the
+    // ONLY spacing mechanism at play). "Gap 0" should therefore mean
+    // "looks exactly like a native button", not "touching": native
+    // 0.29em as the baseline, with the user's own configured gap value
+    // added on top for anything beyond that baseline.
     const gapEm = CONFIG.centeredGapEm || 0;
-    btn.style.marginLeft = gapEm + 'em';
-    btn.style.marginRight = gapEm + 'em';
+    const NATIVE_BUTTON_MARGIN_EM = 0.29;
+    btn.style.marginLeft = (NATIVE_BUTTON_MARGIN_EM + gapEm) + 'em';
+    btn.style.marginRight = (NATIVE_BUTTON_MARGIN_EM + gapEm) + 'em';
   }
   function getLastVanillaButton(container) {
     return container.querySelector('.btnNextTrack') || container.querySelector('.btnFastForward');
