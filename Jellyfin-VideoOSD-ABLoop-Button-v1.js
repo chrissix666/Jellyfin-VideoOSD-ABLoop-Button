@@ -301,14 +301,24 @@ function abIsSupportedPlatform() {
     // between any two adjacent native buttons (confirmed via the real
     // CSS: ".videoOsdBottom .buttons" is a plain flex container with no
     // "gap" property of its own, so per-button margin is genuinely the
-    // ONLY spacing mechanism at play). "Gap 0" should therefore mean
-    // "looks exactly like a native button", not "touching": native
-    // 0.29em as the baseline, with the user's own configured gap value
-    // added on top for anything beyond that baseline.
-    const gapEm = CONFIG.centeredGapEm || 0;
+    // ONLY spacing mechanism at play). "Gap 0" therefore means "looks
+    // exactly like a native button": native 0.29em baseline.
+    // CHANGED per the user's final spacing spec ("like the vanilla
+    // icons": every gap a custom addon participates in must grow by
+    // exactly 1x the configured value, NEVER 2x between two adjacent
+    // customs): the configured gap is no longer applied here at all.
+    // Applying it per-element on both sides -- which is what this
+    // function used to do -- doubles the gap wherever two customs end
+    // up side by side, and only the Core script knows the final
+    // neighbor situation after its own sorting. The Core's
+    // applyCustomGapSpacing() therefore owns the gap entirely
+    // (neighbor-aware, re-derived after every sort) and overwrites
+    // these margins on its own passes; this function only guarantees
+    // the correct native baseline for the standalone case and for the
+    // moment between insertion and the Core's next pass.
     const NATIVE_BUTTON_MARGIN_EM = 0.29;
-    btn.style.marginLeft = (NATIVE_BUTTON_MARGIN_EM + gapEm) + 'em';
-    btn.style.marginRight = (NATIVE_BUTTON_MARGIN_EM + gapEm) + 'em';
+    btn.style.marginLeft = NATIVE_BUTTON_MARGIN_EM + 'em';
+    btn.style.marginRight = NATIVE_BUTTON_MARGIN_EM + 'em';
   }
   function getLastVanillaButton(container) {
     return container.querySelector('.btnNextTrack') || container.querySelector('.btnFastForward');
