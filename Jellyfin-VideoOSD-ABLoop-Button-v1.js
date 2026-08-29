@@ -316,33 +316,41 @@ function abIsSupportedPlatform() {
   function injectButton() {
     const container = document.querySelector('.videoOsdBottom .buttons.focuscontainer-x > div[dir="ltr"]');
     if (!container) return;
-    const lastVanilla = getLastVanillaButton(container);
+
     let btn = document.getElementById(CONFIG.buttonId);
+
+    // FIX for a real, serious bug found live: this used to keep
+    // re-checking, on every single one of this script's own frequent
+    // observer ticks, whether this button sat immediately after the
+    // last vanilla button, and forcibly moved it back there every time
+    // it didn't -- permanently fighting against Core's own reordering
+    // feature (applyBottomLeftOrder()/applyOrder() in the Core script),
+    // since ANY configured order other than "A-B Loop first" would have
+    // this button and Core's own repositioning locked in a constant
+    // tug-of-war, moved back and forth forever. Speed and FrameByFrame's
+    // own scripts never had this problem (confirmed by comparison: both
+    // only ever insert once, checking merely "does a container already
+    // exist anywhere in parent", never re-asserting a specific
+    // position). Matched to that same, correct pattern here: once this
+    // button genuinely exists as a child of the right container, this
+    // function is done, its exact position from then on is entirely
+    // Core's job to manage, not this script's.
+    if (btn && btn.parentElement === container) return;
+
     if (!btn) {
       btn = createButton();
-      refreshResponsiveStyle();
-      if (lastVanilla) {
-        lastVanilla.insertAdjacentElement('afterend', btn);
-      } else {
-        container.appendChild(btn);
-      }
-      applySpacing(btn);
-      updateButtonVisual();
-      return;
     }
-    if (btn.parentElement !== container) {
-      if (lastVanilla) {
-        lastVanilla.insertAdjacentElement('afterend', btn);
-      } else {
-        container.appendChild(btn);
-      }
-      applySpacing(btn);
-      return;
-    }
-    if (lastVanilla && lastVanilla.nextElementSibling !== btn) {
+
+    const lastVanilla = getLastVanillaButton(container);
+    if (lastVanilla) {
       lastVanilla.insertAdjacentElement('afterend', btn);
-      applySpacing(btn);
+    } else {
+      container.appendChild(btn);
     }
+
+    refreshResponsiveStyle();
+    applySpacing(btn);
+    updateButtonVisual();
   }
   function watchForVideoChange() {
     const video = getVideoElement();
