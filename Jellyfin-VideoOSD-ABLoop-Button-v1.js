@@ -213,11 +213,11 @@ function abIsSupportedPlatform() {
     }
     btn.classList.toggle('buttonActive', state === 2);
     if (state === 0) {
-      btn.title = 'A-B Loop (Punkt A setzen)';
+      btn.title = 'Set loop start';
     } else if (state === 1) {
-      btn.title = 'Punkt A gesetzt \u2013 Punkt B setzen';
+      btn.title = 'Set loop end';
     } else if (state === 2) {
-      btn.title = 'Loop aktiv (Klick = beenden)';
+      btn.title = 'Clear loop';
     }
   }
   function handleClick() {
@@ -263,7 +263,7 @@ function abIsSupportedPlatform() {
     const btn = document.createElement('button');
     btn.id = CONFIG.buttonId;
     btn.type = 'button';
-    btn.title = 'A-B Loop (Punkt A setzen)';
+    btn.title = 'Set loop start';
     btn.className = 'paper-icon-button-light autoSize';
     btn.style.display = enabled ? '' : 'none';
     btn.innerHTML = ICON_SVG;
