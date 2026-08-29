@@ -391,6 +391,8 @@ function abIsSupportedPlatform() {
     refreshResponsiveStyle();
     const btn = document.getElementById(CONFIG.buttonId);
     if (btn) applySpacing(btn);
+  }).catch(function (err) {
+    console.error('[VideoOSD ABLoop] config apply failed:', err);
   });
   // ---- END PLUGIN ADAPTER ----
 })();
