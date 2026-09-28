@@ -125,6 +125,7 @@ function abIsSupportedPlatform() {
   let pointA = null;
   let pointB = null;
   let currentVideo = null;
+  let currentItemId;
   let timeUpdateHandler = null;
   let enabled = true;
   let registeredWithMenu = false;
@@ -324,7 +325,7 @@ function abIsSupportedPlatform() {
     return container.querySelector('.btnNextTrack') || container.querySelector('.btnFastForward');
   }
   function injectButton() {
-    const container = document.querySelector('.videoOsdBottom .buttons.focuscontainer-x > div[dir="ltr"]');
+    const container = document.querySelector('#videoOsdPage:not(.hide) .videoOsdBottom .buttons.focuscontainer-x > div[dir="ltr"]');
     if (!container) return;
 
     let btn = document.getElementById(CONFIG.buttonId);
@@ -362,6 +363,15 @@ function abIsSupportedPlatform() {
     applySpacing(btn);
     updateButtonVisual();
   }
+  // Jellyfin reuses the same <video> element when the next item starts
+  // within the same playback session (next episode, playlist), so the
+  // element check alone never resets the loop there. The live OSD's
+  // favorite button carries the id of the item currently playing (set
+  // by Jellyfin on every playback start), used here as the item signal.
+  function getCurrentItemId() {
+    const fav = document.querySelector('#videoOsdPage:not(.hide) .btnUserRating');
+    return fav ? (fav.getAttribute('data-id') || null) : undefined;
+  }
   function watchForVideoChange() {
     const video = getVideoElement();
     if (video && video !== currentVideo) {
@@ -370,6 +380,11 @@ function abIsSupportedPlatform() {
     } else if (!video && currentVideo) {
       resetLoop();
       currentVideo = null;
+    }
+    const itemId = getCurrentItemId();
+    if (itemId !== undefined && itemId !== currentItemId) {
+      if (currentItemId !== undefined) resetLoop();
+      currentItemId = itemId;
     }
   }
   const observer = new MutationObserver(function () {
